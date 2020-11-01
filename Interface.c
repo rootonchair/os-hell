@@ -62,18 +62,6 @@ void garbageCollector()
 {
 }
 /*
-* function open a file and write data in
-*
-* @param fileName name of the File
-* @param data the text data to write in file
-*/
-void openAndWriteFile(char* fileName, char* data)
-{
-
-}
-
-
-/*
 * function read the data from txt file
 *
 * @param fileName name of file
@@ -229,7 +217,6 @@ void checkCommand(char* args)
 {
 	//do something
 }
-
 
 
 
