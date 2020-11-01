@@ -4,35 +4,6 @@
 int prevCommandSize = 0 ;
 char *previousCommands[MAX_HISTORY_COMMANDS] = { NULL };
 
-/*
-* function that display them prompt to user
-*/
-void typePrompt()
-{
-}
-/*
-* function read user input and store in
-*
-* @param command Store the command from user input
-* @param params Store the parameters from user input
-*/
-void readCommand(char* command, char* params[])
-{
-}
-
-/*
-* function fork the command from users
-*
-* @param params Some params, still not sure if needed
-* @return int value whether the fork success
-*/
-int fork(char* params[])
-{
-	int result = 0;
-
-
-	return result;
-}
 
 /*
 * function execute user command
@@ -201,4 +172,3 @@ void checkCommand(char* args)
 {
 	//do something
 }
-
