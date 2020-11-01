@@ -46,15 +46,6 @@ void execute(char* command, char* params[], int exType)
 }
 
 /*
-* function wait for the child Thread
-*
-* @param time maybe something else, just guessing
-*/
-void wait(int time)
-{
-}
-
-/*
 * function read the data from txt file
 *
 * @param fileName name of file
@@ -210,5 +201,4 @@ void checkCommand(char* args)
 {
 	//do something
 }
-
 
