@@ -55,13 +55,6 @@ void wait(int time)
 }
 
 /*
-* function collect garbage
-*
-*/
-void garbageCollector()
-{
-}
-/*
 * function read the data from txt file
 *
 * @param fileName name of file
@@ -217,6 +210,5 @@ void checkCommand(char* args)
 {
 	//do something
 }
-
 
 
