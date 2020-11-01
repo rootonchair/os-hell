@@ -4,8 +4,6 @@
 #define PARRAL 23
 #define RESET 0
 
-
-
 int main(void)
 {
 	char* args[MAX_LINE / 2 + 1]; /* command line arguments */
@@ -13,7 +11,7 @@ int main(void)
 
 	char input[1000];
 	char** parsedInput;
-	char* prevCom = nullptr;
+	char* prevCom = NULL;
 	int arraySize = 0;
 	while (shouldRun) {
 		printf("osh>");
@@ -24,8 +22,10 @@ int main(void)
 		* (2) the child process will invoke execvp()
 		* (3) parent will invoke wait() unless command included &
 		*/
-		parsedInput = parseInput(arraySize);
+		parsedInput = parseInput(&arraySize);
 		prevCom = previousCommand();
+		printf(prevCom);
+		printf("\n");
 	}
 	return 0;
 }

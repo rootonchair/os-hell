@@ -2,7 +2,7 @@
 
 
 int prevCommandSize = 0 ;
-char *previousCommands[MAX_HISTORY_COMMANDS] = { nullptr };
+char *previousCommands[MAX_HISTORY_COMMANDS] = { NULL };
 
 /*
 * function that display them prompt to user
@@ -81,7 +81,7 @@ void openAndWriteFile(char* fileName, char* data)
 */
 char* readFile(char* fileName)
 {
-	return nullptr;
+	return NULL;
 }
 
 /*
@@ -111,23 +111,30 @@ void addToHistory(char *readString) {
 	//supply the space for array
 	previousCommands[prevCommandSize] = (char*)malloc(sizeof(char));
 	
-	if (readString == nullptr)
+	if (readString == NULL)
 		return;
 
 	int i = 0;
 	
-	for (i = 0; readString[i] != '\0'; i++) {
+	for (i = 0;; i++) {
 		//if the command is longer than expected -> supply more
 		if (i > MAX_COMMAND_CHARACTER) {
-			char* temp = nullptr;
+			char* temp = NULL;
 			do {
 				temp = (char*)realloc(previousCommands[prevCommandSize], (i + 1) * sizeof(char));
-			} while (temp != nullptr);
+			} while (temp != NULL);
 			previousCommands[prevCommandSize] = temp;
 		}
-		previousCommands[prevCommandSize][i] = readString[i];
+		if (previousCommands[prevCommandSize] != NULL)
+			previousCommands[prevCommandSize][i] = (char)readString[i];
+
+		if (readString[i] == '\0') {
+			if (previousCommands[prevCommandSize] != NULL)
+				previousCommands[prevCommandSize][i] = (char)'\0';
+
+			break;
+		}
 	}
-	previousCommands[prevCommandSize][i] = (char)'\0';
 	prevCommandSize++;
 }
 
@@ -144,36 +151,67 @@ char* previousCommand()
 * @param arrSize size of the array**
 * @return char** return commands array
 */
-char** parseInput(int& arrSize)
+char** parseInput(int *arrSize)
 {
-	char readString[MAX_COMMAND_CHARACTER], *temp = new char[MAX_COMMAND_CHARACTER];
-	char* res[MAX_COMMAND];
+	char *readString = (char*)malloc(MAX_COMMAND_CHARACTER*sizeof(char));
+	char* res[MAX_COMMAND] = { NULL };
 
 	int i = 0, j = 0;
-	arrSize = 0;
+	*arrSize = 0;
 
 	//read the user input
-	scanf("%[^\n]", readString);
-	getchar();
+	if (scanf("%[^\n]", *&readString) == NULL)
+		return;
+	if (getchar());
+	
 
 	//call checkCommand func
 	checkCommand(readString);
 
 	//add to history
 	addToHistory(readString);
+
 		 
 	//make tokens
-	while (1) {
-		if (readString[i] == SPACE || readString[i] == END_STRING) {
-			temp[j] = '\0';
-			res[arrSize] = temp;
+	while (readString!=NULL) {
+		//initial the array
+		if (j == 0) {
+			char* temp = NULL;
+			do {
+				temp = (char*)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
+				if (temp != NULL) {
+					res[*arrSize] = temp;
+					//avoid mem leak
+					temp = NULL;
+					free(temp);
+					break;
+				}
+			} while (temp == NULL);
+		}
 
-			arrSize++;
+		if (readString[i] == SPACE || readString[i] == END_STRING) {
+			if (res[*arrSize]!=NULL)
+				res[*arrSize][j] = '\0';
+			*arrSize = *arrSize+1;
 			j = 0;
-			temp = new char[MAX_COMMAND_CHARACTER];
 		}
 		else {
-			temp[j] = readString[i];
+			if (j > MAX_COMMAND_CHARACTER) {
+				do {
+					char *temp = (char*)realloc(res[*arrSize],(j+1) * sizeof(char));
+					if (temp != NULL) {
+						res[*arrSize] = temp;
+						//avoid mem leak
+						temp = NULL;
+						free(temp);
+						break;
+					}
+				} while (res[*arrSize]==NULL); //suply fail -> resuply
+			}
+			
+			if (res[*arrSize]!=NULL)
+				res[*arrSize][j] = readString[i];
+			
 			j++;
 		}
 
