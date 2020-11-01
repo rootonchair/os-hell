@@ -17,17 +17,6 @@ void execute(char* command, char* params[], int exType)
 }
 
 /*
-* function read the data from txt file
-*
-* @param fileName name of file
-* @return char* data that read from file
-*/
-char* readFile(char* fileName)
-{
-	return NULL;
-}
-
-/*
 * function store the previous command
 *
 * @param fullCommand The previous command that user type in
