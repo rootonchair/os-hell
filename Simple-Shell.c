@@ -1,31 +1,60 @@
 #include "Interface.h"
-	
-#define MAX_LINE 80 /* The maximum length command */
+
 #define PARRAL 23
 #define RESET 0
 
+
 int main(void)
 {
-	char* args[MAX_LINE / 2 + 1]; /* command line arguments */
-	int shouldRun = 1; /* flag to determine when to exit program */
-
-	char input[1000];
-	char** parsedInput;
+	bool shouldRun = true;
+	char** parsedInput = NULL;
 	char* prevCom = NULL;
 	int arraySize = 0;
+	char** prevCommand = NULL;
+
+	char* input = (char*)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
 	while (shouldRun) {
-		printf("osh>");
-		fflush(stdout);
-		/**	
+		typePrompt();
+		/**
 		* After reading user input, the steps are:
 		* (1) fork a child process using fork()
 		* (2) the child process will invoke execvp()
 		* (3) parent will invoke wait() unless command included &
 		*/
-		parsedInput = parseInput(&arraySize);
-		prevCom = previousCommand();
-		printf(prevCom);
-		printf("\n");
+		//read
+		input = readCommand();
+
+		//check command return ENUM
+		enum CommandType type = checkCommand(input);
+
+		//parse the input and assign to previos command
+		if (type != HISTORY && type != EXIT && type != NOTCOMMAND) {
+			parsedInput = parseInput(input, &arraySize);
+			changePreviousCommand(parsedInput, arraySize);
+		}
+		
+		switch (type) {
+		case NORMAL:
+			executeCommand(parsedInput, true);
+			break;
+		case HISTORY:
+			prevCommand = getPreviousCommandTokens();
+			executeCommand(prevCommand, true);
+			break;
+		case EXIT:
+			exit(0);
+			break;
+		case PIPE:
+			break;
+		case REDIRECT:
+			break;
+		case NOTCOMMAND:
+			break;
+		default:
+			break;
+		}
+
+
 	}
 	return 0;
 }
