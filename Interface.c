@@ -3,7 +3,46 @@
 
 int prevCommandSize = 0 ;
 char *previousCommands[MAX_HISTORY_COMMANDS] = { NULL };
+char* previousCommand[MAX_COMMAND] = { NULL };
 
+/*
+* function that display them prompt to user
+*/
+void typePrompt()
+{
+	printf("osh>");
+	fflush(stdout);
+}
+
+/*
+* function read user input 
+* @return the char array of user input
+*/
+char* readCommand()
+{
+	//init memory
+	char* command = (char*)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
+	
+	//read the user input
+	if (scanf("%[^\n]", *&command) == NULL)
+		return;
+	if (getchar());
+	return command;
+}
+
+/*
+* function fork the command from users
+*
+* @param params Some params, still not sure if needed
+* @return int value whether the fork success
+*/
+int fork(char* params[])
+{
+	int result = 0;
+
+
+	return result;
+}
 
 /*
 * function execute user command
@@ -14,6 +53,45 @@ char *previousCommands[MAX_HISTORY_COMMANDS] = { NULL };
 */
 void execute(char* command, char* params[], int exType)
 {
+}
+
+/*
+* function wait for the child Thread
+*
+* @param time maybe something else, just guessing
+*/
+void wait(int time)
+{
+}
+
+/*
+* function collect garbage
+*
+*/
+void garbageCollector()
+{
+}
+/*
+* function open a file and write data in
+*
+* @param fileName name of the File
+* @param data the text data to write in file
+*/
+void openAndWriteFile(char* fileName, char* data)
+{
+
+}
+
+
+/*
+* function read the data from txt file
+*
+* @param fileName name of file
+* @return char* data that read from file
+*/
+char* readFile(char* fileName)
+{
+	return NULL;
 }
 
 /*
@@ -41,7 +119,9 @@ bool isCommandLegit(char* command, char* params[])
 	
 void addToHistory(char *readString) {	
 	//supply the space for array
-	previousCommands[prevCommandSize] = (char*)malloc(sizeof(char));
+	do {
+		previousCommands[prevCommandSize] = (char*)malloc(sizeof(char));
+	} while (previousCommands[prevCommandSize] == NULL);
 	
 	if (readString == NULL)
 		return;
@@ -70,39 +150,46 @@ void addToHistory(char *readString) {
 	prevCommandSize++;
 }
 
-char* previousCommand()
+/*
+* Get the previous command
+* @params 
+*/
+
+char* getPreviousCommand()
 {
 	int prevIndex = prevCommandSize - 1;
 	return previousCommands[prevCommandSize-1];
 }
 
+/*
+* change the previous command to te new one
+* @params char*prev[] previous tokens array
+* int size array size
+*/
+
+void changePreviousCommand(char*prev[],int size)
+{
+	for (int i = 0; i < size; i++) {
+		previousCommand[i] = prev[i];
+	}
+
+	prev = NULL;
+	free(prev);
+}
+
 
 /*
-* read and parse the Input
+* parse the Input into tokens
 *
 * @param arrSize size of the array**
 * @return char** return commands array
 */
-char** parseInput(int *arrSize)
+char** parseInput(char *readString, int *arrSize)
 {
-	char *readString = (char*)malloc(MAX_COMMAND_CHARACTER*sizeof(char));
 	char* res[MAX_COMMAND] = { NULL };
 
 	int i = 0, j = 0;
 	*arrSize = 0;
-
-	//read the user input
-	if (scanf("%[^\n]", *&readString) == NULL)
-		return;
-	if (getchar());
-	
-
-	//call checkCommand func
-	checkCommand(readString);
-
-	//add to history
-	addToHistory(readString);
-
 		 
 	//make tokens
 	while (readString!=NULL) {
@@ -157,7 +244,27 @@ char** parseInput(int *arrSize)
 	return res;
 }
 
-void checkCommand(char* args)
+/*
+* Check the type of the input command
+* @param char* the Command user input
+* @param int size of the command
+* @return ENUM type of the command
+*/
+enum CommandType checkCommand(char* command)
 {
-	//do something
+	if (command[0] == "\n") {
+		return NOTCOMMAND;
+	}
+
+	if (strcmp(command,"!!")==0)
+		return HISTORY;
+
+	if (strcmp(command, "exit")==0)
+		return EXIT;
+
+	return NORMAL;
 }
+
+
+
+
