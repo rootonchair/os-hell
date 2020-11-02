@@ -11,9 +11,9 @@
 #define MAX_COMMAND_CHARACTER 80
 #define MAX_COMMAND 30
 
-extern enum CommandType
+static enum CommandType
 {
-	PIPE, NORMAL, EXIT, REDIRECT, HISTORY,NOTCOMMAND
+	PIPE, NORMAL, EXIT, REDIRECT, HISTORY, NOTCOMMAND
 };
 
 
@@ -22,19 +22,20 @@ extern char* previousCommands[MAX_HISTORY_COMMANDS];
 extern char* previousCommand[MAX_COMMAND];
 
 void typePrompt();
-char *readCommand();
-int fork(char* params[]);
-void execute(char* command, char* params[], int exType);
-void wait(int time);
-void garbageCollector();
-void openAndWriteFile(char* fileName, char* data);
-char* readFile(char* fileName);
-void historyStore(char* fullCommand);
-bool isCommandLegit(char* command, char* params[]);
-char** parseInput(char*,int*);
+char* readCommand();
+void executeCommand(char** args, bool shouldWait);
+//void execute(char* command, char* params[], int exType);
+//void wait(int time);
+//void garbageCollector();
+//void openAndWriteFile(char* fileName, char* data);
+//char* readFile(char* fileName);
+//void historyStore(char* fullCommand);
+//bool isCommandLegit(char* command, char* params[]);
+char** parseInput(char*, int*);
 enum CommandType checkCommand(char* command);
 extern char* getPreviousCommand();
 extern void changePreviousCommand(char* prev[], int size);
+extern char** getPreviousCommandTokens();
 
 
 

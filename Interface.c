@@ -1,9 +1,9 @@
 #include "Interface.h"
 
 
-int prevCommandSize = 0 ;
-char *previousCommands[MAX_HISTORY_COMMANDS] = { NULL };
-char* previousCommand[MAX_COMMAND] = { NULL };
+int prevCommandSize = 0;
+char* previousCommands[MAX_HISTORY_COMMANDS] = { NULL };
+char* previousCommandTokens[MAX_COMMAND] = { NULL };
 
 /*
 * function that display them prompt to user
@@ -15,34 +15,21 @@ void typePrompt()
 }
 
 /*
-* function read user input 
+* function read user input
 * @return the char array of user input
 */
 char* readCommand()
 {
 	//init memory
 	char* command = (char*)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
-	
+
 	//read the user input
-	if (scanf("%[^\n]", *&command) == NULL)
-		return;
+	if (scanf("%[^\n]", *&command) == 0)
+		return NULL;
 	if (getchar());
 	return command;
 }
 
-/*
-* function fork the command from users
-*
-* @param params Some params, still not sure if needed
-* @return int value whether the fork success
-*/
-int fork(char* params[])
-{
-	int result = 0;
-
-
-	return result;
-}
 
 /*
 * function execute user command
@@ -51,36 +38,28 @@ int fork(char* params[])
 * @param params Store the parameters from user input
 * @param exType execute type (execvp, execvt,...)
 */
-void execute(char* command, char* params[], int exType)
-{
-}
+
 
 /*
 * function wait for the child Thread
 *
 * @param time maybe something else, just guessing
 */
-void wait(int time)
-{
-}
+
 
 /*
 * function collect garbage
 *
 */
-void garbageCollector()
-{
-}
+
+
 /*
 * function open a file and write data in
 *
 * @param fileName name of the File
 * @param data the text data to write in file
 */
-void openAndWriteFile(char* fileName, char* data)
-{
 
-}
 
 
 /*
@@ -89,19 +68,15 @@ void openAndWriteFile(char* fileName, char* data)
 * @param fileName name of file
 * @return char* data that read from file
 */
-char* readFile(char* fileName)
-{
-	return NULL;
-}
+
 
 /*
 * function store the previous command
 *
 * @param fullCommand The previous command that user type in
 */
-void historyStore(char* fullCommand)
-{
-}
+
+
 
 /*
 * function check the legitement of user input
@@ -109,25 +84,20 @@ void historyStore(char* fullCommand)
 * @param fullCommand The command user type in
 * @return bool value if legit or not
 */
-bool isCommandLegit(char* command, char* params[])
-{
-	bool result = false;
 
 
-	return result;
-}
-	
-void addToHistory(char *readString) {	
+
+void addToHistory(char* readString) {
 	//supply the space for array
 	do {
 		previousCommands[prevCommandSize] = (char*)malloc(sizeof(char));
 	} while (previousCommands[prevCommandSize] == NULL);
-	
+
 	if (readString == NULL)
 		return;
 
 	int i = 0;
-	
+
 	for (i = 0;; i++) {
 		//if the command is longer than expected -> supply more
 		if (i > MAX_COMMAND_CHARACTER) {
@@ -152,13 +122,13 @@ void addToHistory(char *readString) {
 
 /*
 * Get the previous command
-* @params 
+* @params
 */
 
 char* getPreviousCommand()
 {
 	int prevIndex = prevCommandSize - 1;
-	return previousCommands[prevCommandSize-1];
+	return previousCommands[prevCommandSize - 1];
 }
 
 /*
@@ -167,10 +137,12 @@ char* getPreviousCommand()
 * int size array size
 */
 
-void changePreviousCommand(char*prev[],int size)
+void changePreviousCommand(char* prev[], int size)
 {
-	for (int i = 0; i < size; i++) {
-		previousCommand[i] = prev[i];
+	int i = 0;
+	for (i = 0; i < size; i++) {
+		previousCommandTokens[i] = (char)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
+		previousCommandTokens[i] = prev[i];
 	}
 
 	prev = NULL;
@@ -184,15 +156,15 @@ void changePreviousCommand(char*prev[],int size)
 * @param arrSize size of the array**
 * @return char** return commands array
 */
-char** parseInput(char *readString, int *arrSize)
+char** parseInput(char* readString, int* arrSize)
 {
-	char* res[MAX_COMMAND] = { NULL };
-
+	//init 
+	char** res = (char*)malloc(MAX_COMMAND * sizeof(char*));
 	int i = 0, j = 0;
 	*arrSize = 0;
-		 
+
 	//make tokens
-	while (readString!=NULL) {
+	while (readString != NULL) {
 		//initial the array
 		if (j == 0) {
 			char* temp = NULL;
@@ -209,15 +181,15 @@ char** parseInput(char *readString, int *arrSize)
 		}
 
 		if (readString[i] == SPACE || readString[i] == END_STRING) {
-			if (res[*arrSize]!=NULL)
+			if (res[*arrSize] != NULL)
 				res[*arrSize][j] = '\0';
-			*arrSize = *arrSize+1;
+			*arrSize = *arrSize + 1;
 			j = 0;
 		}
 		else {
 			if (j > MAX_COMMAND_CHARACTER) {
 				do {
-					char *temp = (char*)realloc(res[*arrSize],(j+1) * sizeof(char));
+					char* temp = (char*)realloc(res[*arrSize], (j + 1) * sizeof(char));
 					if (temp != NULL) {
 						res[*arrSize] = temp;
 						//avoid mem leak
@@ -225,12 +197,12 @@ char** parseInput(char *readString, int *arrSize)
 						free(temp);
 						break;
 					}
-				} while (res[*arrSize]==NULL); //suply fail -> resuply
+				} while (res[*arrSize] == NULL); //suply fail -> resuply
 			}
-			
-			if (res[*arrSize]!=NULL)
+
+			if (res[*arrSize] != NULL)
 				res[*arrSize][j] = readString[i];
-			
+
 			j++;
 		}
 
@@ -252,17 +224,33 @@ char** parseInput(char *readString, int *arrSize)
 */
 enum CommandType checkCommand(char* command)
 {
-	if (command[0] == "\n") {
+	if (strcmp(command, "\n") == 0) {
 		return NOTCOMMAND;
 	}
-
-	if (strcmp(command,"!!")==0)
+	if (strcmp(command, "!!") == 0)
 		return HISTORY;
 
-	if (strcmp(command, "exit")==0)
+	if (strcmp(command, "exit") == 0)
 		return EXIT;
 
 	return NORMAL;
+}
+
+// execute command by Vinh
+
+void executeCommand(char** args, bool shouldWait) {
+	if (fork() == 0) {
+		execvp(args[0], args);
+	}
+	else if (shouldWait) {
+		wait(NULL);
+	}
+}
+
+// return previous command in tokens
+char** getPreviousCommandTokens()
+{
+	return previousCommandTokens;
 }
 
 
