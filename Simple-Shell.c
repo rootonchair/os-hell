@@ -12,7 +12,7 @@ int main(void)
 	int arraySize = 0;
 	char** prevCommand = NULL;
 
-	char* input = (char*)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
+	char* input = NULL;
 	while (shouldRun) {
 		typePrompt();
 		/**
@@ -21,6 +21,10 @@ int main(void)
 		* (2) the child process will invoke execvp()
 		* (3) parent will invoke wait() unless command included &
 		*/
+
+        //avoid mem leak
+        free(input);
+
 		//read
 		input = readCommand();
 
@@ -35,11 +39,11 @@ int main(void)
 		
 		switch (type) {
 		case NORMAL:
-			executeCommand(parsedInput, true);
+			executeCommand(parsedInput);
 			break;
 		case HISTORY:
 			prevCommand = getPreviousCommandTokens();
-			executeCommand(prevCommand, true);
+			executeCommand(prevCommand);
 			break;
 		case EXIT:
 			exit(0);
