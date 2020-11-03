@@ -3,6 +3,8 @@
 #include <stdbool.h> 
 #include <stdlib.h>
 #include <malloc.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #define MAX_HISTORY_COMMANDS 100
 #define SPACE ' '
@@ -10,6 +12,9 @@
 
 #define MAX_COMMAND_CHARACTER 80
 #define MAX_COMMAND 30
+
+#define WRITE_END 1
+#define READ_END 0
 
 static enum CommandType
 {
@@ -19,7 +24,7 @@ static enum CommandType
 
 extern int prevCommandSize;
 extern char* previousCommands[MAX_HISTORY_COMMANDS];
-extern char* previousCommand[MAX_COMMAND];
+extern char** previousCommandTokens;
 
 void typePrompt();
 char* readCommand();
@@ -31,11 +36,17 @@ void executeCommand(char** args);
 //char* readFile(char* fileName);
 //void historyStore(char* fullCommand);
 //bool isCommandLegit(char* command, char* params[]);
+
 char** parseInput(char*, int*);
 enum CommandType checkCommand(char* command);
+void addToHistory(char* readString);
 extern char* getPreviousCommand();
 extern void changePreviousCommand(char* prev[], int size);
 extern char** getPreviousCommandTokens();
+void redirect(char **tokens,int);
+void executeRedirectCommand(char** args,int argsSize);
+void executePipesCommand(char **args,int argsSize);
+
 
 
 
