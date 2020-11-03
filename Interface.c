@@ -251,7 +251,7 @@ void redirect(char **tokens,int size){
 			} else if (strcmp(tokens[i],">") == 0){		
 							filename = tokens[i+1];
 	
-				if ((fd = open(filename, O_WRONLY)) < 0) {
+				if ((fd = open(filename, O_WRONLY | O_CREAT, 0644)) < 0) {
 					//handle open fail
 					printf("Error when open file \n");
 					exit(EXIT_FAILURE);
@@ -269,7 +269,7 @@ void redirect(char **tokens,int size){
 			}  else if (strcmp(tokens[i],">>") == 0){		
 							filename = tokens[i+1];
 	
-				if ((fd = open(filename, O_APPEND | O_WRONLY, 0644)) < 0) {
+				if ((fd = open(filename, O_APPEND | O_WRONLY | O_CREAT, 0644)) < 0) {
 					//handle open fail
 					printf("Error when open file \n");
 					exit(EXIT_FAILURE);
@@ -372,5 +372,4 @@ void executePipesCommand(char **args,int argsSize){
 	    }
 	}
 }
-
 
