@@ -23,7 +23,7 @@ extern char* previousCommand[MAX_COMMAND];
 
 void typePrompt();
 char* readCommand();
-void executeCommand(char** args, bool shouldWait);
+void executeCommand(char** args);
 //void execute(char* command, char* params[], int exType);
 //void wait(int time);
 //void garbageCollector();

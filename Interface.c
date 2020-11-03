@@ -24,68 +24,10 @@ char* readCommand()
 	char* command = (char*)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
 
 	//read the user input
-	if (scanf("%[^\n]", *&command) == 0)
-		return NULL;
-	if (getchar());
+	scanf("%[^\n]", *&command);
+    getchar(); // remove '\n' in the stream
 	return command;
 }
-
-
-/*
-* function execute user command
-*
-* @param command Store the command from user input
-* @param params Store the parameters from user input
-* @param exType execute type (execvp, execvt,...)
-*/
-
-
-/*
-* function wait for the child Thread
-*
-* @param time maybe something else, just guessing
-*/
-
-
-/*
-* function collect garbage
-*
-*/
-
-
-/*
-* function open a file and write data in
-*
-* @param fileName name of the File
-* @param data the text data to write in file
-*/
-
-
-
-/*
-* function read the data from txt file
-*
-* @param fileName name of file
-* @return char* data that read from file
-*/
-
-
-/*
-* function store the previous command
-*
-* @param fullCommand The previous command that user type in
-*/
-
-
-
-/*
-* function check the legitement of user input
-*
-* @param fullCommand The command user type in
-* @return bool value if legit or not
-*/
-
-
 
 void addToHistory(char* readString) {
 	//supply the space for array
@@ -224,7 +166,7 @@ char** parseInput(char* readString, int* arrSize)
 */
 enum CommandType checkCommand(char* command)
 {
-	if (strcmp(command, "\n") == 0) {
+	if (strcmp(command, "") == 0) {
 		return NOTCOMMAND;
 	}
 	if (strcmp(command, "!!") == 0)
@@ -238,8 +180,23 @@ enum CommandType checkCommand(char* command)
 
 // execute command by Vinh
 
-void executeCommand(char** args, bool shouldWait) {
-	if (fork() == 0) {
+int getTokenLength(char** token){
+    int length = 0;
+    while (token[length] != NULL){
+      length+=1;
+    }
+    return length;
+}
+
+void executeCommand(char** args) {
+    int tokenLength = getTokenLength(args);
+    bool shouldWait = true;
+    if (strcmp(args[tokenLength - 1], "&") == 0){
+        shouldWait = false;
+        args[tokenLength - 1] = NULL;
+    }
+
+    if (fork() == 0) {
 		execvp(args[0], args);
 	}
 	else if (shouldWait) {
