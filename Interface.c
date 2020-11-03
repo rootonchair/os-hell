@@ -3,8 +3,7 @@
 
 int prevCommandSize = 0;
 char* previousCommands[MAX_HISTORY_COMMANDS] = { NULL };
-char* previousCommandTokens[MAX_COMMAND] = { NULL };
-
+char** previousCommandTokens = NULL;
 /*
 * function that display them prompt to user
 */
@@ -82,8 +81,8 @@ char* getPreviousCommand()
 void changePreviousCommand(char* prev[], int size)
 {
 	int i = 0;
+	previousCommandTokens = (char**)malloc(MAX_COMMAND * sizeof(char*));
 	for (i = 0; i < size; i++) {
-		previousCommandTokens[i] = (char)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
 		previousCommandTokens[i] = prev[i];
 	}
 
@@ -101,7 +100,7 @@ void changePreviousCommand(char* prev[], int size)
 char** parseInput(char* readString, int* arrSize)
 {
 	//init 
-	char** res = (char*)malloc(MAX_COMMAND * sizeof(char*));
+	char** res = (char**)malloc(MAX_COMMAND * sizeof(char*));
 	int i = 0, j = 0;
 	*arrSize = 0;
 
@@ -175,8 +174,21 @@ enum CommandType checkCommand(char* command)
 	if (strcmp(command, "exit") == 0)
 		return EXIT;
 
+	int i = 0;
+	for (i = 0;;i++) {
+		if (command[i] == '\0')
+			break;
+		else if (command[i] == '>' || command[i] == '<')
+			return REDIRECT;
+		else if (command[i] == '|')
+			return PIPE;
+	}
+
 	return NORMAL;
 }
+
+
+
 
 // execute command by Vinh
 
@@ -211,5 +223,88 @@ char** getPreviousCommandTokens()
 }
 
 
+void redirect(char **tokens,int size){
+	int i = 0,fd;
+	bool deleteRedirectCommand = false;
+	
+	char* filename;
+	for (i = 0; i< size; i++){
+		if (deleteRedirectCommand){
+			tokens[i] = NULL;
+		} else {
+			if (strcmp(tokens[i],"<") == 0){
+				filename = tokens[i+1];
+				if ((fd = open(filename, O_RDONLY)) < 0) {
+					//handle open fail
+					printf("Error when open file\n");
+					exit(EXIT_FAILURE);
+				}
+				
+  				if(dup2(fd, STDIN_FILENO) < 0) {
+    					printf("Unable to duplicate file descriptor.");	
+    					exit(EXIT_FAILURE);
+  				}
+	
+				close(fd);
+				deleteRedirectCommand = true;
+				tokens[i] = NULL;
+			} else if (strcmp(tokens[i],">") == 0){		
+							filename = tokens[i+1];
+	
+				if ((fd = open(filename, O_WRONLY)) < 0) {
+					//handle open fail
+					printf("Error when open file \n");
+					exit(EXIT_FAILURE);
+	
+				}
+	
+				if(dup2(fd, STDOUT_FILENO) < 0) {
+    					printf("Unable to duplicate file descriptor.");	
+    					exit(EXIT_FAILURE);
+  				}
+	
+				close(fd);
+				deleteRedirectCommand = true;
+				tokens[i] = NULL;
+			}  else if (strcmp(tokens[i],">>") == 0){		
+							filename = tokens[i+1];
+	
+				if ((fd = open(filename, O_APPEND | O_WRONLY, 0644)) < 0) {
+					//handle open fail
+					printf("Error when open file \n");
+					exit(EXIT_FAILURE);
+	
+				}
+	
+				if(dup2(fd, STDOUT_FILENO) < 0) {
+    					printf("Unable to duplicate file descriptor.");	
+    					exit(EXIT_FAILURE);
+  				}
+	
+				close(fd);
+				deleteRedirectCommand = true;
+				tokens[i] = NULL;
+			} 
+		}
+	}
+}
+
+
+void executeRedirectCommand(char** args,int argsSize) {
+	int tokenLength = getTokenLength(args);
+	bool shouldWait = true;
+	if (strcmp(args[tokenLength - 1], "&") == 0){
+		shouldWait = false;
+		args[tokenLength - 1] = NULL;	    
+	}
+	if (fork() == 0) {
+		redirect(args,argsSize);
+		execvp(args[0], args);
+	}
+	else if (shouldWait) {
+		wait(NULL);
+	}
+	
+}
 
 
