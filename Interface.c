@@ -238,13 +238,13 @@ void executeCommand(char** args) {
 	if ((pid = fork()) == 0) {
 		if (execvp(args[0], args) == -1) {
 			perror(args[0]);
-			exit(0);
+			exit(EXIT_FAILURE);
 		}
 	}
 	else if (pid == -1) {
 		// Error forking
 		perror(FORK_ERROR);
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 	else if (shouldWait) {
 		wait(NULL);
@@ -341,13 +341,13 @@ void executeRedirectCommand(char** args, int argsSize) {
 		redirect(args, argsSize);
 		if (execvp(args[0], args) == -1) {
 			perror(args[0]);
-			exit(0);
+			exit(EXIT_FAILURE);
 		}
 	}
 	else if (pid == -1) {
 		// Error forking
 		perror(FORK_ERROR);
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 	else if (shouldWait) {
 		wait(NULL);
@@ -394,7 +394,7 @@ void executePipesCommand(char** args, int argsSize) {
 		close(fd[WRITE_END]);
 		if (execlp(firstCmd, firstCmd, firstArg, (char*)NULL) < 0)
 			perror(firstCmd);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	else
 	{ //in parent process
@@ -410,7 +410,7 @@ void executePipesCommand(char** args, int argsSize) {
 			close(fd[READ_END]);
 			if (execlp(secondCmd, secondCmd, secondArg, (char*)NULL) < 0)
 				perror(secondCmd);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 		else
 		{
