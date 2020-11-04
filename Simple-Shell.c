@@ -62,6 +62,7 @@ int main(void)
 			exit(0);
 			break;
 		case PIPE:
+			executePipesCommand(parsedInput,arraySize);
 			break;
 		case REDIRECT:
 			executeRedirectCommand(parsedInput,arraySize);
