@@ -4,6 +4,30 @@
 int prevCommandSize = 0;
 char* previousCommands[MAX_HISTORY_COMMANDS] = { NULL };
 char** previousCommandTokens = NULL;
+
+//avoid mem leak
+void garbageCollector(){
+	printf("hi");
+	int i = 0;
+	for (i = 0;;i++){
+		if (previousCommands[i] != NULL){
+			free(previousCommands[i]);
+			previousCommands[i] = NULL;
+		}
+		else 
+			break;
+	}
+
+	for (i = 0;;i++){
+		if (previousCommandTokens[i] != NULL){
+			free(previousCommandTokens[i]);
+			previousCommandTokens[i] = NULL;
+		}
+		else 
+			break;
+	}
+	printf("hi");
+}
 /*
 * function that display them prompt to user
 */
@@ -49,7 +73,7 @@ void addToHistory(char* readString) {
 			previousCommands[prevCommandSize] = temp;
 		}
 		if (previousCommands[prevCommandSize] != NULL)
-			previousCommands[prevCommandSize][i] = (char)readString[i];
+			previousCommands[prevCommandSize][i] = (char)*(readString+i);
 
 		if (readString[i] == '\0') {
 			if (previousCommands[prevCommandSize] != NULL)
@@ -69,7 +93,7 @@ void addToHistory(char* readString) {
 char* getPreviousCommand()
 {
 	int prevIndex = prevCommandSize - 1;
-	return previousCommands[prevCommandSize - 1];
+	return previousCommands[prevIndex];
 }
 
 /*
@@ -78,18 +102,20 @@ char* getPreviousCommand()
 * int size array size
 */
 
-void changePreviousCommand(char* prev[], int size)
+bool changePreviousCommand(char* prev[], int size)
 {
 	int i = 0;
+	if (prev[i] == NULL || strcmp(prev[i],"")==0) {
+		printf("No history command !!!\n");		
+		return false;
+	}
 	previousCommandTokens = (char**)malloc(MAX_COMMAND * sizeof(char*));
 	for (i = 0; i < size; i++) {
 		previousCommandTokens[i] = prev[i];
 	}
 
-	prev = NULL;
-	free(prev);
+	return true;
 }
-
 
 /*
 * parse the Input into tokens
@@ -200,20 +226,28 @@ int getTokenLength(char** token){
     return length;
 }
 
-void executeCommand(char** args) {
+void executeCommand(char** args) { 
+    pid_t pid;
+
     int tokenLength = getTokenLength(args);
     bool shouldWait = true;
     if (strcmp(args[tokenLength - 1], "&") == 0){
         shouldWait = false;
         args[tokenLength - 1] = NULL;
     }
-
-    if (fork() == 0) {
-		execvp(args[0], args);
+    
+    if ((pid=fork()) == 0) {
+	if (execvp(args[0], args) == -1){
+		fprintf(stderr,"%s","Invalid Command !!!\n");
 	}
-	else if (shouldWait) {
-		wait(NULL);
-	}
+    }
+    else if (pid == -1){
+        // Error forking
+    	fprintf(stderr,"%s","Fork Error !!!\n");
+    }
+    else if (shouldWait) {
+	wait(NULL);
+    } 
 }
 
 // return previous command in tokens
@@ -222,9 +256,9 @@ char** getPreviousCommandTokens()
 	return previousCommandTokens;
 }
 
-
+//redirect out&input to another file
 void redirect(char **tokens,int size){
-	int i = 0, fd;
+	int i = 0,fd;
 	bool deleteRedirectCommand = false;
 	
 	char* filename;
@@ -236,12 +270,12 @@ void redirect(char **tokens,int size){
 				filename = tokens[i+1];
 				if ((fd = open(filename, O_RDONLY)) < 0) {
 					//handle open fail
-					printf("Error when open file\n");
+					fprintf(stderr,"Error when open file\n");
 					exit(EXIT_FAILURE);
 				}
 				
   				if(dup2(fd, STDIN_FILENO) < 0) {
-    					printf("Unable to duplicate file descriptor.");	
+    					fprintf(stderr,"Unable to duplicate file descriptor.");	
     					exit(EXIT_FAILURE);
   				}
 	
@@ -251,15 +285,15 @@ void redirect(char **tokens,int size){
 			} else if (strcmp(tokens[i],">") == 0){		
 							filename = tokens[i+1];
 	
-				if ((fd = open(filename, O_WRONLY | O_CREAT, 0644)) < 0) {
+				if ((fd = open(filename, O_WRONLY)) < 0) {
 					//handle open fail
-					printf("Error when open file \n");
+					fprintf(stderr,"Error when open file \n");
 					exit(EXIT_FAILURE);
 	
 				}
 	
 				if(dup2(fd, STDOUT_FILENO) < 0) {
-    					printf("Unable to duplicate file descriptor.");	
+    					fprintf(stderr,"Unable to duplicate file descriptor.");	
     					exit(EXIT_FAILURE);
   				}
 	
@@ -269,15 +303,15 @@ void redirect(char **tokens,int size){
 			}  else if (strcmp(tokens[i],">>") == 0){		
 							filename = tokens[i+1];
 	
-				if ((fd = open(filename, O_APPEND | O_WRONLY | O_CREAT, 0644)) < 0) {
+				if ((fd = open(filename, O_APPEND | O_WRONLY, 0644)) < 0) {
 					//handle open fail
-					printf("Error when open file \n");
+					fprintf(stderr,"Error when open file \n");
 					exit(EXIT_FAILURE);
 	
 				}
 	
 				if(dup2(fd, STDOUT_FILENO) < 0) {
-    					printf("Unable to duplicate file descriptor.");	
+    					fprintf(stderr,"Unable to duplicate file descriptor.");	
     					exit(EXIT_FAILURE);
   				}
 	
@@ -289,22 +323,98 @@ void redirect(char **tokens,int size){
 	}
 }
 
-
+//function to execute redirect command
 void executeRedirectCommand(char** args,int argsSize) {
+	pid_t pid;
 	int tokenLength = getTokenLength(args);
 	bool shouldWait = true;
 	if (strcmp(args[tokenLength - 1], "&") == 0){
 		shouldWait = false;
 		args[tokenLength - 1] = NULL;	    
 	}
-	if (fork() == 0) {
+
+	if ((pid=fork()) == 0) {
 		redirect(args,argsSize);
-		execvp(args[0], args);
+		if (execvp(args[0], args) == -1){
+			fprintf(stderr,"%s","Invalid Command !!!\n");
+		}
+	}
+	else if (pid == -1){
+	// Error forking
+		fprintf(stderr,"%s","Fork Error !!!\n");
 	}
 	else if (shouldWait) {
 		wait(NULL);
 	}
-	
 }
+
+void executePipesCommand(char **args,int argsSize){
+	pid_t pid;
+	int fd[2],returnVal;
+
+	if((pipe(fd)<0)){
+        	fprintf(stderr,"Error creating pipe.\n");
+        	exit(EXIT_FAILURE);
+    	}
+
+	if((pid=fork())<0){
+        	fprintf(stderr,"Error forking.\n");
+        	exit(EXIT_FAILURE);    
+    	}
+
+	char *firstCmd = args[0],*firstArg = args[1],*secondCmd = NULL,*secondArg = NULL;
+
+	if (strcmp(args[1],"|") == 0){
+		firstArg = NULL;
+		secondCmd = args[2];
+		if (args[3] != NULL){
+			secondArg = args[3];
+		}
+	} else {
+		secondCmd = args[3];
+		if (args[4] != NULL){
+			secondArg = args[4];
+		}
+	}
+
+	//in child process
+	if(pid==0)
+	{
+	    dup2(fd[WRITE_END], STDOUT_FILENO);
+		//close read descriptor
+	    close(fd[READ_END]);
+		//close write descriptor	
+	    close(fd[WRITE_END]);
+	    if (execlp(firstCmd, firstCmd, firstArg, (char*) NULL)<0)
+		fprintf(stderr,"Error exec\n");
+	    exit(1);
+	}
+	else
+	{ //in parent process
+	    	if((pid=fork())<0){
+        		fprintf(stderr,"Error forking.\n");
+        		exit(EXIT_FAILURE);    
+		}
+
+	    if(pid==0)
+	    {
+		dup2(fd[READ_END], STDIN_FILENO);
+		close(fd[WRITE_END]);
+		close(fd[READ_END]);
+		if (execlp(secondCmd, secondCmd, secondArg,(char*) NULL)<0)
+			fprintf(stderr,"Error exec\n");
+		exit(1);
+	    }
+	    else
+	    {
+		int status;
+		close(fd[READ_END]);
+		close(fd[WRITE_END]);
+		// wait for the child process to finish
+		waitpid(pid, &status, 0);
+	    }
+	}
+}
+
 
 
