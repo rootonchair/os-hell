@@ -13,6 +13,7 @@ int main(void)
 	char** prevCommandTokens = NULL;
 	bool executePrevCommand = false;
 	enum CommandType type = NOTCOMMAND;
+	bool isPrevComNotNull = false;
 
 	char* input = NULL;
 	while (shouldRun) {
@@ -37,7 +38,7 @@ int main(void)
 			//parse the input and assign to previos command
 			if (type != HISTORY && type != EXIT && type != NOTCOMMAND) {
 				parsedInput = parseInput(input, &arraySize);
-				changePreviousCommand(parsedInput, arraySize);
+				isPrevComNotNull = changePreviousCommand(parsedInput, arraySize);
 				addToHistory(input);
 				executePrevCommand = false;
 			}
@@ -45,6 +46,7 @@ int main(void)
 			parsedInput = prevCommandTokens;
 			prevCommandTokens = NULL;
 			input = getPreviousCommand();
+			//printf("%s",input);
 			type = checkCommand(input);
 			executePrevCommand = false;
 		}
@@ -56,7 +58,12 @@ int main(void)
 			break;
 		case HISTORY:
 			prevCommandTokens = getPreviousCommandTokens();
-			executePrevCommand = true;	
+			if (isPrevComNotNull) {
+				isPrevComNotNull = false;
+				executePrevCommand = true;
+			} else {
+				fprintf(stderr,"No history command !!!\n");
+			}
 			break;
 		case EXIT:
 			exit(0);
