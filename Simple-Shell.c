@@ -26,6 +26,7 @@ int main(void)
 
 		//avoid mem leak
 		free(input);
+		free(parsedInput);
 
 		if (!executePrevCommand){
 			typePrompt();
@@ -66,6 +67,7 @@ int main(void)
 			}
 			break;
 		case EXIT:
+			garbageCollector();
 			exit(0);
 			break;
 		case PIPE:
@@ -82,6 +84,7 @@ int main(void)
 
 
 	}
+	garbageCollector();
 	return 0;
 }
 

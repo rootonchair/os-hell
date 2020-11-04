@@ -11,7 +11,6 @@ char** previousCommandTokens = NULL;
 
 //avoid mem leak
 void garbageCollector() {
-	printf("hi");
 	int i = 0;
 	for (i = 0;; i++) {
 		if (previousCommands[i] != NULL) {
@@ -30,7 +29,6 @@ void garbageCollector() {
 		else
 			break;
 	}
-	printf("hi");
 }
 /*
 * function that display them prompt to user
