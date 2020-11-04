@@ -356,7 +356,7 @@ void executeRedirectCommand(char** args, int argsSize) {
 
 void executePipesCommand(char** args, int argsSize) {
 	pid_t pid;
-	int fd[2], returnVal;
+	int fd[2];
 
 	if ((pipe(fd) < 0)) {
 		perror("Error creating pipe");
@@ -414,11 +414,12 @@ void executePipesCommand(char** args, int argsSize) {
 		}
 		else
 		{
-			int status;
 			close(fd[READ_END]);
 			close(fd[WRITE_END]);
-			// wait for the child process to finish
-			waitpid(pid, &status, 0);
+			// wait for the child processes to finish
+			// in case both of them all failed
+			wait(NULL);
+			wait(NULL);
 		}
 	}
 }
