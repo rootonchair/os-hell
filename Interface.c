@@ -424,4 +424,69 @@ void executePipesCommand(char** args, int argsSize) {
 	}
 }
 
+void executePipesCommand(char **args,int argsSize){
+	pid_t pid;
+	int fd[2],returnVal;;
+
+	if((pipe(fd)<0)){
+        	printf("Error creating pipe.\n");
+        	exit(EXIT_FAILURE);
+    	}
+
+	if((pid=fork())<0){
+        	printf("Error forking.\n");
+        	exit(EXIT_FAILURE);    
+    	}
+
+	char *firstCmd = args[0],*firstArg = args[1],*secondCmd = NULL,*secondArg = NULL;
+
+	if (strcmp(args[1],"|") == 0){
+		firstArg = NULL;
+		secondCmd = args[2];
+		if (args[3] != NULL){
+			secondArg = args[3];
+		}
+	} else {
+		secondCmd = args[3];
+		if (args[4] != NULL){
+			secondArg = args[4];
+		}
+	}
+
+	//in child process
+	if(pid==0)
+	{
+	    dup2(fd[WRITE_END], STDOUT_FILENO);
+		//close read descriptor
+	    close(fd[READ_END]);
+		//close write descriptor	
+	    close(fd[WRITE_END]);
+	    execlp(firstCmd, firstCmd, firstArg, (char*) NULL);
+	    exit(1);
+	}
+	else
+	{ //in parent process
+	    	if((pid=fork())<0){
+        		printf("Error forking.\n");
+        		exit(EXIT_FAILURE);    
+		}
+
+	    if(pid==0)
+	    {
+		dup2(fd[READ_END], STDIN_FILENO);
+		close(fd[WRITE_END]);
+		close(fd[READ_END]);
+		execlp(secondCmd, secondCmd, secondArg,(char*) NULL);
+		exit(1);
+	    }
+	    else
+	    {
+		int status;
+		close(fd[READ_END]);
+		close(fd[WRITE_END]);
+		// wait for the child process to finish
+		waitpid(pid, &status, 0);
+	    }
+	}
+}
 
