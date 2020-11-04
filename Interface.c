@@ -142,8 +142,8 @@ char** parseInput(char* readString, int* arrSize)
 				if (temp != NULL) {
 					res[*arrSize] = temp;
 					//avoid mem leak
-					temp = NULL;
 					free(temp);
+					temp = NULL;
 					break;
 				}
 			} while (temp == NULL);
@@ -286,7 +286,7 @@ void redirect(char** tokens, int size) {
 			else if (strcmp(tokens[i], ">") == 0) {
 				filename = tokens[i + 1];
 
-				if ((fd = open(filename, O_WRONLY)) < 0) {
+				if ((fd = open(filename, O_WRONLY |	O_CREAT, 0644)) < 0) {
 					//handle open fail
 					perror(OPEN_ERROR);
 					exit(EXIT_FAILURE);
@@ -305,7 +305,7 @@ void redirect(char** tokens, int size) {
 			else if (strcmp(tokens[i], ">>") == 0) {
 				filename = tokens[i + 1];
 
-				if ((fd = open(filename, O_APPEND | O_WRONLY, 0644)) < 0) {
+				if ((fd = open(filename, O_APPEND | O_WRONLY | O_CREAT, 0644)) < 0) {
 					//handle open fail
 					perror(OPEN_ERROR);
 					exit(EXIT_FAILURE);

@@ -26,7 +26,6 @@ int main(void)
 
 		//avoid mem leak
 		free(input);
-		free(parsedInput);
 
 		if (!executePrevCommand){
 			typePrompt();
