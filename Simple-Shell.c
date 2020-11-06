@@ -8,7 +8,6 @@ int main(void)
 {
 	bool shouldRun = true;
 	char** parsedInput = NULL;
-	char* prevCom = NULL;
 	int arraySize = 0;
 	char** prevCommandTokens = NULL;
 	bool executePrevCommand = false;
@@ -50,7 +49,6 @@ int main(void)
 			type = checkCommand(input);
 			executePrevCommand = false;
 		}
-		
 		
 		switch (type) {
 		case NORMAL:

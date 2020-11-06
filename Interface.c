@@ -21,6 +21,9 @@ void garbageCollector() {
 			break;
 	}
 
+	if (previousCommandTokens == NULL)
+		return;
+
 	for (i = 0;; i++) {
 		if (previousCommandTokens[i] != NULL) {
 			free(previousCommandTokens[i]);
@@ -141,9 +144,6 @@ char** parseInput(char* readString, int* arrSize)
 				temp = (char*)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
 				if (temp != NULL) {
 					res[*arrSize] = temp;
-					//avoid mem leak
-					free(temp);
-					temp = NULL;
 					break;
 				}
 			} while (temp == NULL);
@@ -352,6 +352,38 @@ void executeRedirectCommand(char** args, int argsSize) {
 	}
 }
 
+void splitPipeCommand(char** inputTokens, char*** firstCmdPtr, char*** sndCmdPtr){
+
+	*firstCmdPtr = (char**)malloc(MAX_COMMAND * sizeof(char*));
+	int firstCmdLength = 0;
+	*sndCmdPtr = (char**)malloc(MAX_COMMAND * sizeof(char*));
+	int sndCmdLength = 0;
+
+	int inputTokensLength = 0;
+	bool isSwitched = false;
+	while(inputTokens[inputTokensLength] != NULL){
+		if (strcmp(inputTokens[inputTokensLength], "|") == 0){
+			isSwitched = true;
+		}
+		else {
+			char* token = inputTokens[inputTokensLength];
+			if(!isSwitched){
+				(*firstCmdPtr)[firstCmdLength] = token;
+				firstCmdLength += 1;
+			}
+			else {
+				(*sndCmdPtr)[sndCmdLength] = token;
+				sndCmdLength += 1;
+			}
+		}
+
+		inputTokensLength += 1;
+	}
+
+	(*firstCmdPtr)[firstCmdLength] = NULL;
+	(*sndCmdPtr)[sndCmdLength] = NULL;
+}
+
 void executePipesCommand(char** args, int argsSize) {
 	pid_t pid;
 	int fd[2];
@@ -366,21 +398,10 @@ void executePipesCommand(char** args, int argsSize) {
 		exit(EXIT_FAILURE);
 	}
 
-	char* firstCmd = args[0], * firstArg = args[1], * secondCmd = NULL, * secondArg = NULL;
+	char** firstCmd;
+	char** sndCmd;
 
-	if (strcmp(args[1], "|") == 0) {
-		firstArg = NULL;
-		secondCmd = args[2];
-		if (args[3] != NULL) {
-			secondArg = args[3];
-		}
-	}
-	else {
-		secondCmd = args[3];
-		if (args[4] != NULL) {
-			secondArg = args[4];
-		}
-	}
+	splitPipeCommand(args, &firstCmd, &sndCmd);
 
 	//in child process
 	if (pid == 0)
@@ -390,8 +411,8 @@ void executePipesCommand(char** args, int argsSize) {
 		close(fd[READ_END]);
 		//close write descriptor	
 		close(fd[WRITE_END]);
-		if (execlp(firstCmd, firstCmd, firstArg, (char*)NULL) < 0)
-			perror(firstCmd);
+		if (execvp(firstCmd[0], firstCmd) < 0)
+			perror(firstCmd[0]);
 		exit(EXIT_FAILURE);
 	}
 	else
@@ -406,8 +427,8 @@ void executePipesCommand(char** args, int argsSize) {
 			dup2(fd[READ_END], STDIN_FILENO);
 			close(fd[WRITE_END]);
 			close(fd[READ_END]);
-			if (execlp(secondCmd, secondCmd, secondArg, (char*)NULL) < 0)
-				perror(secondCmd);
+			if (execvp(sndCmd[0], sndCmd) < 0)
+				perror(sndCmd[0]);
 			exit(EXIT_FAILURE);
 		}
 		else
@@ -418,6 +439,10 @@ void executePipesCommand(char** args, int argsSize) {
 			// in case both of them all failed
 			wait(NULL);
 			wait(NULL);
+			// Only free the pointers
+			free(firstCmd);
+			free(sndCmd);
 		}
 	}
+
 }
