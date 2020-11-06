@@ -144,9 +144,6 @@ char** parseInput(char* readString, int* arrSize)
 				temp = (char*)malloc(MAX_COMMAND_CHARACTER * sizeof(char));
 				if (temp != NULL) {
 					res[*arrSize] = temp;
-					//avoid mem leak
-					//free(temp);
-					//temp = NULL;
 					break;
 				}
 			} while (temp == NULL);
